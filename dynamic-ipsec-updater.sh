@@ -89,7 +89,11 @@ main() {
 
     $cfg begin
     $cfg delete vpn ipsec site-to-site peer "$currentPeer";
-    xargs -L 1 $cfg < <(printf '%s\n' "$newConfig")
+
+    while read -r line; do
+        echo "$line" | xargs "$cfg" set
+    done < <(printf '%s\n' "$newConfig")
+
 
     $cfg commit
     $cfg save
