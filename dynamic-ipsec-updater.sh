@@ -25,6 +25,7 @@ main() {
 
     local peerDomain="";
     local ikeGroup="";
+    local force=false;
 
     while [[ $# -gt 0 ]]; do
         key="$1"
@@ -51,6 +52,10 @@ main() {
                 shift;
                 shift;
                 ;;
+            -f|--force)
+                force=true
+                shift;
+                ;;
             *)
                 echo "Unknown argument: $key";
                 help_and_exit;
@@ -63,13 +68,13 @@ main() {
         help_and_exit;
     fi
 
-    newPeer=$(set -eu; ./dynamic-ipsec-utils.py lookup "$peerDomain");
-    newLocal=$(set -eu; curl --retry 3 https://api.ipify.org/);
-
     currentPeer=$(set -eu; ./dynamic-ipsec-utils.py get-peer-address "$ikeGroup" $extraArgs)
     currentLocal=$(set -eu; ./dynamic-ipsec-utils.py get-local-address "$ikeGroup" $extraArgs)
 
-    if [[ "$currentLocal" == "$newLocal" ]] && [[ "$currentPeer" == "$newPeer" ]]; then
+    newPeer=$(set -eu; ./dynamic-ipsec-utils.py lookup "$peerDomain");
+    newLocal=$(set -eu; curl -s --retry 3 https://api.ipify.org/);
+
+    if [[ "$currentLocal" == "$newLocal" ]] && [[ "$currentPeer" == "$newPeer" ]] && [ $force == false ]; then
         echo "Everything up to date."
         exit 0;
     fi
