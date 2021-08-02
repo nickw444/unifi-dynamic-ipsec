@@ -65,7 +65,7 @@ def main_impl(args):
     if (not args.force and current_local == new_local_address and
             current_peer == new_peer_address):
         print("Nothing to do, everything up to date.")
-        sys.exit(0)
+        return
 
     print("Config outdated... Updating")
     print("Current peer: {}".format(current_peer))
@@ -113,8 +113,21 @@ if __name__ == '__main__':
     parser.add_argument(
         '--ike-group', '-i', required=True,
         help='IKE Group identifier to update')
+    parser.add_argument(
+        '--hc-url', '-hc', help="healthchecks.io url to ping")
     parser.add_argument('--force', '-f', action='store_true')
-    parser.set_defaults(func=main_impl)
 
     args = parser.parse_args()
-    args.func(args)
+
+    if args.hc_url:
+        urllib.urlopen(args.hc_url + '/start')
+
+    try:
+        main_impl(args)
+    except Exception as e:
+        if args.hc_url:
+            urllib.urlopen(args.hc_url + '/fail')
+        raise e
+
+    if args.hc_url:
+        urllib.urlopen(args.hc_url)
