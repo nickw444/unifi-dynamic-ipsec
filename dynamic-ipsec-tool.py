@@ -50,8 +50,10 @@ def get_entry(config, ike_group):
     raise Exception("No config found for IKE group: {}".format(ike_group))
 
 
-def get_wan_address():
-    f = urllib.urlopen('https://api.ipify.org/')
+def get_wan_address(no_ssl):
+    proto = 'http' if no_ssl else 'https'
+    url = proto + '://api.ipify.org/'
+    f = urllib.urlopen(url)
     return f.read()
 
 
@@ -61,7 +63,7 @@ def main_impl(args):
     current_local = conf_entry['local-address']
 
     new_peer_address = socket.gethostbyname(args.peer_domain)
-    new_local_address = get_wan_address()
+    new_local_address = get_wan_address(args.no_ssl)
 
     if (not args.force and current_local == new_local_address and
             current_peer == new_peer_address):
@@ -117,6 +119,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--hc-url', '-hc', help="healthchecks.io url to ping")
     parser.add_argument('--force', '-f', action='store_true')
+    parser.add_argument('--no-ssl', action='store_true')
 
     args = parser.parse_args()
 
